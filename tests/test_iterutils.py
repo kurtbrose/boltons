@@ -598,3 +598,42 @@ def test_windowed_filled():
 
     assert list(windowed_iter(range(4), 3)) == [(0, 1, 2), (1, 2, 3)]
     assert list(windowed_iter(range(4), 3, fill=None)) == [(0, 1, 2), (1, 2, 3), (2, 3, None), (3, None, None)]
+
+
+def test_nested_bucketize_basic():
+    from boltons.iterutils import nested_bucketize
+
+    items = [
+        {'color': 'red', 'shape': 'triangle'},
+        {'color': 'blue', 'shape': 'square'},
+        {'color': 'red', 'shape': 'circle'},
+    ]
+
+    result = nested_bucketize(items, 'color', 'shape')
+    assert result == {
+        'red': {
+            'triangle': [items[0]],
+            'circle': [items[2]],
+        },
+        'blue': {'square': [items[1]]},
+    }
+
+
+def test_nested_bucketize_value_transform():
+    from boltons.iterutils import nested_bucketize
+
+    items = [
+        {'color': 'red', 'shape': 'triangle', 'id': 1},
+        {'color': 'red', 'shape': 'triangle', 'id': 2},
+    ]
+
+    res = nested_bucketize(items, 'color', 'shape', value_transform=lambda x: x['id'])
+    assert res == {'red': {'triangle': [1, 2]}}
+
+
+def test_bucketize_mapping_key():
+    from boltons.iterutils import bucketize
+
+    data = [{'a': 1}, {'a': 2}]
+
+    assert bucketize(data, 'a') == {1: [{'a': 1}], 2: [{'a': 2}]}

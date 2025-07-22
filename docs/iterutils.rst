@@ -81,6 +81,18 @@ These functions operate on iterables, dividing into groups based on a
 given condition.
 
 .. autofunction:: bucketize
+.. autofunction:: nested_bucketize
+
+Example of nested bucketing::
+
+    >>> data = [
+    ...     {'color': 'red', 'shape': 'triangle'},
+    ...     {'color': 'red', 'shape': 'circle'},
+    ...     {'color': 'blue', 'shape': 'square'}]
+    >>> nested_bucketize(data, 'color', 'shape')
+    {'red': {'triangle': [{'color': 'red', 'shape': 'triangle'}],
+             'circle': [{'color': 'red', 'shape': 'circle'}]},
+     'blue': {'square': [{'color': 'blue', 'shape': 'square'}]}}
 .. autofunction:: partition
 
 Sorting
