@@ -730,7 +730,13 @@ def bucketize(src, key=bool, value_transform=None, key_filter=None):
         src = zip(key, src)
 
     if isinstance(key, str):
-        def key_func(x): return getattr(x, key, x)
+        def key_func(x):
+            if hasattr(x, key):
+                return getattr(x, key)
+            try:
+                return x[key]
+            except Exception:
+                return x
     elif callable(key):
         key_func = key
     elif isinstance(key, list):
@@ -752,6 +758,33 @@ def bucketize(src, key=bool, value_transform=None, key_filter=None):
         if key_filter is None or key_filter(key_of_val):
             ret.setdefault(key_of_val, []).append(value_transform(val))
     return ret
+
+
+def nested_bucketize(src, *keys, value_transform=None):
+    """Recursively bucketize ``src`` by each of ``keys``.
+
+    Works like :func:`bucketize`, but nests dictionaries according to
+    successive keys. ``value_transform`` is applied to values in the
+    innermost buckets.
+
+    >>> items = [{'color': 'red', 'shape': 'triangle'},
+    ...          {'color': 'blue', 'shape': 'square'},
+    ...          {'color': 'red', 'shape': 'circle'}]
+    >>> nested_bucketize(items, 'color', 'shape')
+    {'red': {'triangle': [items[0]], 'circle': [items[2]]},
+     'blue': {'square': [items[1]]}}
+    """
+
+    if not keys:
+        raise TypeError('expected at least one key')
+    if len(keys) == 1:
+        return bucketize(src, keys[0], value_transform=value_transform)
+
+    first = bucketize(src, keys[0])
+    for k, vals in first.items():
+        first[k] = nested_bucketize(vals, *keys[1:],
+                                   value_transform=value_transform)
+    return first
 
 
 def partition(src, key=bool):
